@@ -9,6 +9,8 @@ import numpy as np
 import model
 import data
 
+from pathlib import Path
+
 cinn = model.FashionMNIST_cINN3(5e-4)
 cinn.cuda()
 scheduler = torch.optim.lr_scheduler.MultiStepLR(cinn.optimizer, milestones=[20, 40], gamma=0.1)
@@ -45,4 +47,5 @@ for epoch in range(N_epochs):
             nll_mean = []
     scheduler.step()
 
+Path("output").mkdir(exist_ok=True)
 torch.save(cinn.state_dict(), 'output/fashionmnist_cinn.pt')

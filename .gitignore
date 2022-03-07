@@ -1,0 +1,9 @@
+*.pdf
+.vscode
+
+*.bkg
+*.brf
+*.blg
+*.aux
+*.log
+*.synctex.gz

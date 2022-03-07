@@ -7,3 +7,7 @@
 *.aux
 *.log
 *.synctex.gz
+
+__pycache__/
+output/
+fashionmnist_data/

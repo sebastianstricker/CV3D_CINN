@@ -1,23 +1,24 @@
-from random import gauss
-import torch
-import torch.nn as nn
+import time
 
 import numpy as np
-
 from matplotlib import pyplot as plt
+
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader
 
 import FrEIA.framework as Ff
 import FrEIA.modules as Fm
 
-import time
+import data
 
 # hyper parameters
 BATCH_SIZE = 64
 TEST_BATCH_SIZE = 100
-EPOCHS = 10
-LEARNING_RATE = 1e-4 # 1.0
+EPOCHS = 80
+LEARNING_RATE = 1e-3 # 1.0
 WEIGHT_DECAY=1e-5
-GAMMA = 0.1
+GAMMA = 0.5
 LOG_INTERVAL = 50
 
 def subnet_fc(c_in, c_out):
@@ -41,88 +42,98 @@ def create_inn(dims):
 
     return inn
 
-def plot_distributions(gauss1, gauss2):
-    x1, y1 = gauss1.T
-    x2, y2 = gauss2.T
+def plot_distributions(data):
+    x1, y1 = data.T
     
     fig, ax = plt.subplots()
     ax.set_aspect(1)
     ax.grid(True)
 
     ax.scatter(x1,y1, s=plt.rcParams['lines.markersize'])
-    ax.scatter(x2,y2, s=plt.rcParams['lines.markersize'])
 
     plt.show()
 
-def train(inn, train_data, test_data):
+def train(inn, train_loader, test_loader):
     inn.cuda()
 
     trainable_parameters = [p for p in inn.parameters() if p.requires_grad]
 
     optimizer = torch.optim.Adam(trainable_parameters, lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[20, 40])
-    
-    N_epochs = 60
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[20, 40, 60], gamma=GAMMA)
+
     t_start = time.time()
     nll_mean = []
 
     dims_in = inn.dims_in[0][0]
 
-    for epoch in range(N_epochs):
-        for i, (x, l) in enumerate(train_data):
+    val_x, val_l = zip(*list(sample for sample in train_loader.dataset))
+    val_x = torch.stack(val_x, 0).cuda()
+    val_l = torch.LongTensor(val_l).cuda()
+
+    print('Epoch\tBatch/Total \tTime \tNLL train\tNLL val\tLR')
+    for epoch in range(EPOCHS):
+        for i, (x, l) in enumerate(train_loader):
             x, l = x.cuda(), l.cuda()
-            z, log_j = inn(x, l)
+            z, log_j = inn(x)
 
             nll = torch.mean(z**2) / 2 - torch.mean(log_j) / dims_in
             nll.backward()
-            torch.nn.utils.clip_grad_norm_(inn.trainable_parameters, 10.)
+            torch.nn.utils.clip_grad_norm_(trainable_parameters, 10.)
             nll_mean.append(nll.item())
-            inn.optimizer.step()
-            inn.optimizer.zero_grad()
+            optimizer.step()
+            optimizer.zero_grad()
 
-            if not i % LOG_INTERVAL:
+            if i == 0:
                 with torch.no_grad():
-                    z, log_j = inn(list(zip(*train_data)))
+                    z, log_j = inn(val_x)
                     nll_val = torch.mean(z**2) / 2 - torch.mean(log_j) / dims_in
 
                 print('%.3i \t%.5i/%.5i \t%.2f \t%.6f\t%.6f\t%.2e' % (epoch,
-                                                                i, 100,
-                                                                (time() - t_start)/60.,
+                                                                i, len(train_loader),
+                                                                (time.time() - t_start)/60.,
                                                                 np.mean(nll_mean),
                                                                 nll_val.item(),
-                                                                inn.optimizer.param_groups[0]['lr'],
+                                                                optimizer.param_groups[0]['lr'],
                                                                 ), flush=True)
                 nll_mean = []
         scheduler.step()
-    return
 
-def test(inn, gauss1, gauss2):
-    return
+    return inn
 
-def generate_data():
-
-    gauss_1 = torch.tensor(np.random.multivariate_normal(mean=[-2, -5], cov=np.eye(2), size=500))
-    gauss_2 = torch.tensor(np.random.multivariate_normal(mean=[5, 3], cov=np.eye(2), size=500))
+def test(inn, test_loader):
+    inn.cuda()
+    data = np.array([x.cpu().detach().numpy() for x, label in test_loader.dataset])
     
-    #plot_distributions(gauss_1, gauss_2)
+    #plot_distributions(data)
+    
+    results = []
+    with torch.no_grad():
+        for i, (x, l) in enumerate(test_loader):
+            x = x.cuda()
+            l = l.cuda()
+        
+            output, log_j = inn(x)
+            results += output
 
-    l1 = torch.zeros(len(gauss_1))
-    l2 = torch.ones(len(gauss_2))
+    results = np.array([x.cpu().detach().numpy() for x in results])
 
-    train_data   = zip(torch.vstack((gauss_1[400:], gauss_2[400:])), torch.hstack((l1[400:], l2[400:])))
-    test_data    = zip(torch.vstack((gauss_1[400:], gauss_2[400:])), torch.hstack((l1[400:], l2[400:])))
+    plot_distributions(results)
 
-    return train_data, test_data
+    return
 
 def main():
 
     inn = create_inn(dims=2)
 
-    train_data, test_data = generate_data()
+    train_data  = data.GaussianDistributions(nr_samples=500)
+    test_data   = data.GaussianDistributions(nr_samples=100)
 
-    train(inn, train_data, test_data)
+    train_loader    = DataLoader(train_data, batch_size=BATCH_SIZE, shuffle=True)
+    test_loader     = DataLoader(train_data, batch_size=BATCH_SIZE, shuffle=False)
 
-    test(inn, test_data)
+    inn = train(inn, train_loader, test_loader)
+
+    test(inn, test_loader)
 
     return
 

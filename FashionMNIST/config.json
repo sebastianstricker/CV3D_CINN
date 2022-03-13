@@ -1,7 +1,7 @@
 {
     "batch_size": 256,
     "seed": 42,
-    "device": "cpu",
+    "device": "gpu",
 
     "data": {
         "augm_sigma": 0.08,

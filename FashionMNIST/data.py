@@ -72,7 +72,7 @@ def get_test_dataset():
 
 
 def get_dataloader(ds, config):
-    pin_memory = True if config["device"] == "gpu" else False
+    pin_memory = True if config["device"] == "cuda" else False
     return DataLoader(ds,
                       batch_size=config["batch_size"],
                       shuffle=True,

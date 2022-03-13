@@ -67,6 +67,7 @@ def main(config):
 
                     nll_val_mean = []
                     for (x_val, y_val) in val_dl:
+                        x_val, y_val = x_val.to(train_config["device"]), y_val.to(train_config["device"])
                         z, log_j = cinn(x_val, y_val)
                         nll_val = torch.mean(z**2) / 2 - torch.mean(log_j) / NDIMS_TOTAL
                         nll_val_mean.append(nll_val.item())

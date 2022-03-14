@@ -43,6 +43,7 @@ Heidelberg University, WS2021/22\\
    In the following we document our experiments with the conditional invertible neural network (cINN) architecture as proposed by \cite{main_paper_CINN}.
    In the first part, the concept is illustrated on a simple toy example to provide a more intuitive understanding of the image generation and style transfer process.
    The second part focuses on the application on new data. We chose FashionMNIST \cite{fashion_mnist} as a simple yet diverse dataset and show results and difficulties with image generation and style transfer.
+   We build our models using the FrEIA framework \cite{freia}
 \end{abstract}
 
 %%%%%%%%% BODY TEXT
@@ -83,10 +84,11 @@ As will be shown in section \ref{toy}, interpreting the individual dimensions in
 $Z$ is a finite set, but the probability distribution enforced on the set is a continuous function. Therefore, it is possible to sample from the distribution to obtain a $z' \notin Z$. Running the network in reverse results in $f^{-1}(z';c;\theta) = x'$. $x'$ is then a result, that has not been generated before. 
 
 For style transfer, a $z$ is obtained form an arbitrary $x$ via the network $f(x;c_x;\theta) = z$. Setting $c' \neq c_x$, the style of $x$ can be mapped to all other class labels via $f(z;c';\theta)$.
-\newpage
 
 \section{Toy example}\label{toy}
 In the following, a simple example using 4 gaussian distributions is used to illustrate and explore properties of the cINN mappings described in the Introduction.
+
+The model used consists of 8 AllInOne coupling blocks, described in the framework \cite{freia}. As a subnet for each block, a fully connected network with 2 hidden layers and 256 nodes each is employed.
 
 \begin{figure*}[t]
 	\begin{center}

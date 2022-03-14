@@ -80,7 +80,7 @@ class FashionMNIST_cINN(nn.Module):
         split_nodes = []
 
         # Stage 1
-        subnet = sub_conv(16, 3)
+        subnet = sub_conv(32, 3)
         for k in range(5):
             nodes.append(Ff.Node(nodes[-1], Fm.PermuteRandom, {"seed": k}))
             nodes.append(Ff.Node(nodes[-1], Fm.GLOWCouplingBlock,
@@ -94,7 +94,7 @@ class FashionMNIST_cINN(nn.Module):
         nodes.append(Ff.Node(nodes[-1].out0, Fm.HaarDownsampling, {"rebalance": 0.5}))
 
         # Stage 2
-        subnet = sub_conv(32, 3)
+        subnet = sub_conv(64, 3)
         for k in range(5):
             nodes.append(Ff.Node(nodes[-1], Fm.PermuteRandom, {"seed": k}))
             nodes.append(Ff.Node(nodes[-1], Fm.GLOWCouplingBlock,
@@ -108,7 +108,7 @@ class FashionMNIST_cINN(nn.Module):
         nodes.append(Ff.Node(nodes[-1].out0, Fm.HaarDownsampling, {"rebalance": 0.5}))
 
         # Stage 3
-        subnet = sub_conv(64, 3)
+        subnet = sub_conv(128, 3)
         for k in range(10):
             nodes.append(Ff.Node(nodes[-1], Fm.PermuteRandom, {"seed": k}))
             nodes.append(Ff.Node(nodes[-1], Fm.GLOWCouplingBlock,

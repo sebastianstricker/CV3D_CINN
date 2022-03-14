@@ -4,7 +4,7 @@
     "device": "cuda",
 
     "data": {
-        "augm_sigma": 0.08,
+        "augm_sigma": 0.02,
         "val_percentage": 0.05
     },
 
@@ -14,7 +14,7 @@
 
     "train": {
         "n_epochs": 60,
-        "lr": 1e-4,
+        "lr": 1e-3,
 
         "scheduler": {
             "milestones": [20, 40],

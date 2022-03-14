@@ -1,5 +1,3 @@
-import time
-
 import numpy as np
 
 import torch
@@ -24,6 +22,8 @@ def test_2d(inn, test_loader):
 
     #Plot initial distributions
     input_data = np.array([np.append(x.cpu().detach().numpy(), label) for x, label in test_loader.dataset])
+
+    print("----- Initial Distributions -----")
     data.plot_distributions(input_data)
 
     #Plot mapping
@@ -38,6 +38,7 @@ def test_2d(inn, test_loader):
 
     results = np.array([x.cpu().detach().numpy() for x in results])
 
+    print("----- Latent Space -----")
     data.plot_distributions(results)
 
     # Plot reverse samples
@@ -57,6 +58,7 @@ def test_2d(inn, test_loader):
     # From torch to numpy for plotting
     results = np.array([x.cpu().detach().numpy() for x in results])
 
+    print("----- Sample Generation -----")
     data.plot_distributions(results)
     return
 
@@ -66,6 +68,8 @@ def style_transfer(inn, test_loader):
     ###### Plot with shapes
     #Plot initial distributions
     input_data = np.array([np.append(x.cpu().detach().numpy(), label) for x, label in test_loader.dataset])
+
+    print("----- Initial Distributions -----")
     data.plot_distributions(input_data)
 
     ######## style transfer
@@ -99,6 +103,9 @@ def style_transfer(inn, test_loader):
 
     # From torch to numpy for plotting
     results = np.array([x.cpu().detach().numpy() for x in results])
+
+
+    print("----- Style Transfer-----")
     data.plot_distributions(results)
 
     ####### Fix one dim to shape triangle in latent space and reverse_sample
@@ -131,6 +138,8 @@ def style_transfer(inn, test_loader):
 
     # From torch to numpy for plotting
     results = np.array([x.cpu().detach().numpy() for x in results])
+
+    print("----- Sample Generation - Latent Dimension 2 fixed to 2.0 -----")
     data.plot_distributions(results)
     return
 
@@ -163,8 +172,15 @@ def with_style(distribution_centers):
 def main():
 
     distribution_centers = [[3.0,3.0], [-5.0,-5.0], [-15.0,-15.0], [12.0, 0.0]]
-
+    
+    print("######################################")
+    print("Training network for Sample Generation")
+    print("######################################")
     no_style(distribution_centers)
+
+    print("#####################################")
+    print("Training network for Style Transfer")
+    print("#####################################")
     with_style(distribution_centers)
 
     return

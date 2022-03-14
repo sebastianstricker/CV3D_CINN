@@ -1,139 +1,171 @@
 import time
 
 import numpy as np
-from matplotlib import pyplot as plt
 
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
-import FrEIA.framework as Ff
-import FrEIA.modules as Fm
-
 import data
+import model
+import train
 
 # hyper parameters
 BATCH_SIZE = 64
 TEST_BATCH_SIZE = 100
-EPOCHS = 80
-LEARNING_RATE = 1e-3 # 1.0
+EPOCHS = 60
+LEARNING_RATE = 1e-2 # 1.0
 WEIGHT_DECAY=1e-5
 GAMMA = 0.5
 LOG_INTERVAL = 50
 
-def subnet_fc(c_in, c_out):
-    return nn.Sequential(nn.Linear(c_in, 512), nn.ReLU(),
-                        nn.Linear(512,  c_out))
-
-# def subnet_conv(c_in, c_out):
-#     return nn.Sequential(nn.Conv2d(c_in, 256,   3, padding=1), nn.ReLU(),
-#                         nn.Conv2d(256,  c_out, 3, padding=1))
-
-# def subnet_conv_1x1(c_in, c_out):
-#     return nn.Sequential(nn.Conv2d(c_in, 256,   1), nn.ReLU(),
-#                         nn.Conv2d(256,  c_out, 1))
-
-def create_inn(dims):
-
-    inn = Ff.SequenceINN(dims)
-
-    for k in range(8):
-        inn.append(Fm.AllInOneBlock, subnet_constructor=subnet_fc, permute_soft=True)
-
-    return inn
-
-def plot_distributions(data):
-    x1, y1 = data.T
-    
-    fig, ax = plt.subplots()
-    ax.set_aspect(1)
-    ax.grid(True)
-
-    ax.scatter(x1,y1, s=plt.rcParams['lines.markersize'])
-
-    plt.show()
-
-def train(inn, train_loader, test_loader):
+def test_2d(inn, test_loader):
     inn.cuda()
 
-    trainable_parameters = [p for p in inn.parameters() if p.requires_grad]
+    #Plot initial distributions
+    input_data = np.array([np.append(x.cpu().detach().numpy(), label) for x, label in test_loader.dataset])
+    data.plot_distributions(input_data)
 
-    optimizer = torch.optim.Adam(trainable_parameters, lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[20, 40, 60], gamma=GAMMA)
-
-    t_start = time.time()
-    nll_mean = []
-
-    dims_in = inn.dims_in[0][0]
-
-    val_x, val_l = zip(*list(sample for sample in train_loader.dataset))
-    val_x = torch.stack(val_x, 0).cuda()
-    val_l = torch.LongTensor(val_l).cuda()
-
-    print('Epoch\tBatch/Total \tTime \tNLL train\tNLL val\tLR')
-    for epoch in range(EPOCHS):
-        for i, (x, l) in enumerate(train_loader):
-            x, l = x.cuda(), l.cuda()
-            z, log_j = inn(x)
-
-            nll = torch.mean(z**2) / 2 - torch.mean(log_j) / dims_in
-            nll.backward()
-            torch.nn.utils.clip_grad_norm_(trainable_parameters, 10.)
-            nll_mean.append(nll.item())
-            optimizer.step()
-            optimizer.zero_grad()
-
-            if i == 0:
-                with torch.no_grad():
-                    z, log_j = inn(val_x)
-                    nll_val = torch.mean(z**2) / 2 - torch.mean(log_j) / dims_in
-
-                print('%.3i \t%.5i/%.5i \t%.2f \t%.6f\t%.6f\t%.2e' % (epoch,
-                                                                i, len(train_loader),
-                                                                (time.time() - t_start)/60.,
-                                                                np.mean(nll_mean),
-                                                                nll_val.item(),
-                                                                optimizer.param_groups[0]['lr'],
-                                                                ), flush=True)
-                nll_mean = []
-        scheduler.step()
-
-    return inn
-
-def test(inn, test_loader):
-    inn.cuda()
-    data = np.array([x.cpu().detach().numpy() for x, label in test_loader.dataset])
-    
-    #plot_distributions(data)
-    
+    #Plot mapping
     results = []
     with torch.no_grad():
-        for i, (x, l) in enumerate(test_loader):
+        for x, l in test_loader:
             x = x.cuda()
             l = l.cuda()
         
-            output, log_j = inn(x)
-            results += output
+            output, log_j = inn(x, l, jac=False)
+            results += torch.hstack((output,torch.unsqueeze(l, dim=1)))
 
     results = np.array([x.cpu().detach().numpy() for x in results])
 
-    plot_distributions(results)
+    data.plot_distributions(results)
 
+    # Plot reverse samples
+    results = []
+    center_dist = data.GaussianDistributions(nr_samples=200, distribution_centers=[[0.0, 0.0]]*test_loader.dataset.nr_distributions)
+    rev_loader  = DataLoader(center_dist, batch_size=BATCH_SIZE, shuffle=False)
+    with torch.no_grad():
+        for z, l in rev_loader:
+            z = z.cuda()
+            l = l.cuda()
+        
+            output, log_j = inn.reverse_sample(z, l)
+
+            # Append labels to output and add to result
+            results += torch.hstack((output,torch.unsqueeze(l, dim=1)))
+
+    # From torch to numpy for plotting
+    results = np.array([x.cpu().detach().numpy() for x in results])
+
+    data.plot_distributions(results)
     return
+
+def style_transfer(inn, test_loader):
+    inn.cuda()
+
+    ###### Plot with shapes
+    #Plot initial distributions
+    input_data = np.array([np.append(x.cpu().detach().numpy(), label) for x, label in test_loader.dataset])
+    data.plot_distributions(input_data)
+
+    ######## style transfer
+    # labels 0,..., label_count-1 will be present
+    label_count = test_loader.dataset.nr_distributions
+    sample_size = 5
+
+    # as long as sample_size is low, labels will by consruction be 0
+    x, l = zip(*test_loader.dataset[:sample_size])
+    x = torch.stack(list(x))
+    l = torch.tensor(list(l))
+
+    # get latent vector z for samples
+    with torch.no_grad():
+        x = x.cuda()
+        l = l.cuda()
+    
+        z, _ = inn(x, l, jac=False)
+
+    # Transfer style
+    results = []
+    with torch.no_grad():
+        for l in range(label_count):
+            z = z.cuda()
+            l = torch.tensor([l]*sample_size).cuda()
+        
+            output, _ = inn.reverse_sample(z, l)
+
+            # Append labels to output and add to result
+            results += torch.hstack((output,torch.unsqueeze(l, dim=1)))
+
+    # From torch to numpy for plotting
+    results = np.array([x.cpu().detach().numpy() for x in results])
+    data.plot_distributions(results)
+
+    ####### Fix one dim to shape triangle in latent space and reverse_sample
+    # dimension 1 of latent space seems to encode shape information most often.
+    # Not consistently replicateable, however
+    results = []
+    center_dist = data.GaussianDistributions(nr_samples=50, distribution_centers=[[0.0, 0.0]]*test_loader.dataset.nr_distributions)
+    rev_loader  = DataLoader(center_dist, batch_size=BATCH_SIZE, shuffle=False)
+    with torch.no_grad():
+        for z, l in rev_loader:
+            
+            shape_tensor = torch.full(size=(z.shape[0],1), fill_value=2.0)
+            # fix dim 0
+            #z = torch.hstack((shape_tensor, z))
+
+            # fix dim 1
+            d0, d2 = torch.split(z, 1, dim=1)
+            z = torch.hstack((d0, shape_tensor, d2))
+
+            # fix dim 2
+            #z = torch.hstack((z, shape_tensor))
+
+            z = z.cuda()
+            l = l.cuda()
+        
+            output, log_j = inn.reverse_sample(z, l)
+
+            # Append labels to output and add to result
+            results += torch.hstack((output,torch.unsqueeze(l, dim=1)))
+
+    # From torch to numpy for plotting
+    results = np.array([x.cpu().detach().numpy() for x in results])
+    data.plot_distributions(results)
+    return
+
+def no_style(distribution_centers):
+    inn = model.Toy_cINN(dims=2, nr_conditions=len(distribution_centers))
+
+    train_data  = data.GaussianDistributions(nr_samples=800, distribution_centers=distribution_centers)
+    test_data   = data.GaussianDistributions(nr_samples=400, distribution_centers=distribution_centers)
+
+    train_loader    = DataLoader(train_data, batch_size=BATCH_SIZE, shuffle=True)
+    test_loader     = DataLoader(test_data, batch_size=BATCH_SIZE, shuffle=False)
+
+    inn = train.train(inn, train_loader, test_loader, epochs=EPOCHS, learning_rate=LEARNING_RATE, weight_decay=WEIGHT_DECAY, gamma=GAMMA)
+
+    test_2d(inn, test_loader)
+
+def with_style(distribution_centers):
+    inn = model.Toy_cINN(dims=3, nr_conditions=len(distribution_centers))
+
+    train_data  = data.GaussianDistributions(nr_samples=800, distribution_centers=distribution_centers, style=True)
+    test_data   = data.GaussianDistributions(nr_samples=400, distribution_centers=distribution_centers, style=True)
+
+    train_loader    = DataLoader(train_data, batch_size=BATCH_SIZE, shuffle=True)
+    test_loader     = DataLoader(test_data, batch_size=BATCH_SIZE, shuffle=False)
+
+    inn = train.train(inn, train_loader, test_loader, epochs=EPOCHS, learning_rate=LEARNING_RATE, weight_decay=WEIGHT_DECAY, gamma=GAMMA)
+
+    style_transfer(inn, test_loader)
 
 def main():
 
-    inn = create_inn(dims=2)
+    distribution_centers = [[3.0,3.0], [-5.0,-5.0], [-15.0,-15.0], [12.0, 0.0]]
 
-    train_data  = data.GaussianDistributions(nr_samples=500)
-    test_data   = data.GaussianDistributions(nr_samples=100)
-
-    train_loader    = DataLoader(train_data, batch_size=BATCH_SIZE, shuffle=True)
-    test_loader     = DataLoader(train_data, batch_size=BATCH_SIZE, shuffle=False)
-
-    inn = train(inn, train_loader, test_loader)
-
-    test(inn, test_loader)
+    no_style(distribution_centers)
+    with_style(distribution_centers)
 
     return
 

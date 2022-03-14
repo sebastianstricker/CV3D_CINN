@@ -8,10 +8,6 @@
         "val_percentage": 0.05
     },
 
-    "model": {
-
-    },
-
     "train": {
         "n_epochs": 60,
         "lr": 1e-3,

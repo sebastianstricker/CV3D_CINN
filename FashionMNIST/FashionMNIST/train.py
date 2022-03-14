@@ -104,6 +104,9 @@ def main(config):
 
         scheduler.step()
 
+    Path("output").mkdir(exist_ok=True)
+    torch.save(cinn.state_dict(), 'output/fashionmnist_cinn.pt')
+
 
 if __name__ == "__main__":
     with open(Path(__file__).parent / "config.json", "r", encoding="utf8") as f:

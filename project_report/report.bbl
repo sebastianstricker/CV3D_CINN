@@ -6,4 +6,14 @@ Lynton Ardizzone, Carsten L{\"{u}}th, Jakob Kruse, Carsten Rother, and Ullrich
 \newblock Guided image generation with conditional invertible neural networks.
 \newblock {\em CoRR}, abs/1907.02392, 2019.
 
+\bibitem{RealNVP}
+Laurent Dinh, Jascha Sohl{-}Dickstein, and Samy Bengio.
+\newblock Density estimation using real {NVP}.
+\newblock {\em CoRR}, abs/1605.08803, 2016.
+
+\bibitem{fashion_mnist}
+Han Xiao, Kashif Rasul, and Roland Vollgraf.
+\newblock Fashion-mnist: a novel image dataset for benchmarking machine
+  learning algorithms, 2017.
+
 \end{thebibliography}

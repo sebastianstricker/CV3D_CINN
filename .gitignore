@@ -10,4 +10,6 @@
 
 __pycache__/
 output/
+train_output/
 fashionmnist_data/
+data/

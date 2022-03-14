@@ -1,29 +1,9 @@
 \begin{thebibliography}{1}\itemsep=-1pt
 
-\bibitem{Alpher02}
-FirstName Alpher.
-\newblock Frobnication.
-\newblock {\em IEEE Trans. Pattern Anal. Mach. Intell.}, 12(1):234--778, 2002.
-
-\bibitem{Alpher03}
-FirstName Alpher and FirstName Fotheringham-Smythe.
-\newblock Frobnication revisited.
-\newblock {\em Journal of Foo}, 13(1):234--778, 2003.
-
-\bibitem{Alpher04}
-FirstName Alpher, FirstName Fotheringham-Smythe, and FirstName Gamow.
-\newblock Can a machine frobnicate?
-\newblock {\em Journal of Foo}, 14(1):234--778, 2004.
-
-\bibitem{Authors14}
-FirstName LastName.
-\newblock The frobnicatable foo filter, 2014.
-\newblock Face and Gesture submission ID 324. Supplied as additional material
-  {\tt fg324.pdf}.
-
-\bibitem{Authors14b}
-FirstName LastName.
-\newblock Frobnication tutorial, 2014.
-\newblock Supplied as additional material {\tt tr.pdf}.
+\bibitem{main_paper_CINN}
+Lynton Ardizzone, Carsten L{\"{u}}th, Jakob Kruse, Carsten Rother, and Ullrich
+  K{\"{o}}the.
+\newblock Guided image generation with conditional invertible neural networks.
+\newblock {\em CoRR}, abs/1907.02392, 2019.
 
 \end{thebibliography}

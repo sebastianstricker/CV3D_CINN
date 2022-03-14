@@ -13,3 +13,4 @@ output/
 train_output/
 fashionmnist_data/
 data/
+*.egg-info

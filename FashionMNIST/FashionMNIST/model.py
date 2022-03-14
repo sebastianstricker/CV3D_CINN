@@ -12,7 +12,6 @@ Code adapted from: https://github.com/VLL-HD/conditional_INNs/blob/master/mnist_
 """
 
 
-# TODO: check docstring for errors
 def one_hot_encode(y):
     """
     We create one-hot-encodings for 4 stages:

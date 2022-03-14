@@ -9,7 +9,6 @@ import numpy as np
 from pathlib import Path
 
 
-# TODO (optional): Dynamically compute DATA_MEAN, DATA_STD
 DATA_MEAN = 0.2861
 DATA_STD = 0.3530
 

@@ -7,7 +7,9 @@ import FrEIA.framework as Ff
 import FrEIA.modules as Fm
 
 import time
-
+"""
+Adapted from: https://github.com/VLL-HD/conditional_INNs/blob/master/mnist_minimal_example
+"""
 def train(inn, train_loader, test_loader, learning_rate, weight_decay, gamma, epochs):
     inn.cuda()
 

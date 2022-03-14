@@ -13,6 +13,9 @@ def one_hot_sequenceINN(labels, nr_conditions, out=None):
     out = one_hot_GraphINN(labels, nr_conditions, out)
     return (out,)
 
+"""
+Function from: https://github.com/VLL-HD/conditional_INNs/blob/master/mnist_minimal_example
+"""
 def one_hot_GraphINN(labels, nr_conditions, out=None):
     '''
     Convert LongTensor labels (contains labels 0-9), to a one hot vector.
@@ -26,6 +29,9 @@ def one_hot_GraphINN(labels, nr_conditions, out=None):
     out.scatter_(dim=1, index=labels.view(-1,1), value=1.)
     return out
 
+"""
+Function adapted from: https://github.com/VLL-HD/conditional_INNs/blob/master/mnist_minimal_example
+"""
 class Toy_cINN(nn.Module):
     '''cINN for class-conditional MNISt generation'''
     def __init__(self, dims, nr_conditions):

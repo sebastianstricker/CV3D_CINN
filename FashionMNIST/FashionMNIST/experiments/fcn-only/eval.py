@@ -22,7 +22,6 @@ def sample_images(cinn, label, device):
     with torch.no_grad():
         samples = cinn.reverse_sample(z, y)[0].cpu().numpy()
         samples = unnormalize(samples)
-        samples = samples.mean(axis=1)
 
     full_image = np.zeros((28*10, 28*10))
 
@@ -47,7 +46,6 @@ def sample_images_with_temp(cinn, device):
     with torch.no_grad():
         samples = cinn.reverse_sample(z, y)[0].cpu().numpy()
         samples = unnormalize(samples)
-        samples = samples.mean(axis=1)
 
     full_image = np.zeros((28*10, 28*7))
 

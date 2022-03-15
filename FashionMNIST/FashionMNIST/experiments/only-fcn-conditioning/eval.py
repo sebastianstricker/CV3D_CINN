@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import model
-from data import unnormalize, LABEL_NAMES, NDIMS_TOTAL
+from FashionMNIST.data import unnormalize, LABEL_NAMES, NDIMS_TOTAL
 
 from pathlib import Path
 

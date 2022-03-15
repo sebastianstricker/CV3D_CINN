@@ -4,12 +4,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import model
-from data import unnormalize, LABEL_NAMES, NDIMS_TOTAL
+from FashionMNIST.data import unnormalize, LABEL_NAMES, NDIMS_TOTAL
 
 from pathlib import Path
 
 
-def sample_images(cinn, label, device):
+def sample_images(cinn, label, std_val, device):
     '''produces and saves to disk cINN samples for a given label (0-9)'''
 
     n_samples = 100
@@ -20,7 +20,7 @@ def sample_images(cinn, label, device):
     z = 1.0 * torch.randn(n_samples, NDIMS_TOTAL).to(device)
 
     with torch.no_grad():
-        samples = cinn.reverse_sample(z, y)[0].cpu().numpy()
+        samples = cinn.reverse_sample(z, y, torch.full_like(y, std_val))[0].cpu().numpy()
         samples = unnormalize(samples)
         samples = samples.mean(axis=1)
 
@@ -35,7 +35,7 @@ def sample_images(cinn, label, device):
                full_image, vmin=0, vmax=1, cmap='gray')
 
 
-def sample_images_with_temp(cinn, device):
+def sample_images_with_temp(cinn, std_val, device):
     y = torch.arange(0, 10).repeat_interleave(7).to(device)
     temp = torch.arange(0.7, 1.4, 0.1) \
                 .repeat_interleave(NDIMS_TOTAL) \
@@ -45,7 +45,7 @@ def sample_images_with_temp(cinn, device):
     z = temp * (torch.randn(10, NDIMS_TOTAL).repeat_interleave(7, axis=0).to(device))
 
     with torch.no_grad():
-        samples = cinn.reverse_sample(z, y)[0].cpu().numpy()
+        samples = cinn.reverse_sample(z, y, torch.full_like(y, std_val))[0].cpu().numpy()
         samples = unnormalize(samples)
         samples = samples.mean(axis=1)
 
@@ -71,11 +71,11 @@ def main(args):
 
     # Generate 100 images per class and save to disk
     for i in range(10):
-        sample_images(cinn, i, args.device)
+        sample_images(cinn, i, args.std_val, args.device)
 
     # Generate 1 image per class, vary their temperature
     # and save to disk
-    sample_images_with_temp(cinn, args.device)
+    sample_images_with_temp(cinn, args.std_val, args.device)
 
 
 if __name__ == "__main__":
@@ -84,5 +84,10 @@ if __name__ == "__main__":
                         help="Device which should be used to perform evaluation",
                         choices=["cpu", "cuda"],
                         default="cuda")
+    parser.add_argument("--std_val",
+                        help="Conditioning standard deviation specific to softflow"
+                             " used to sample images.",
+                        type=float,
+                        default=1e-3)
     args = parser.parse_args()
     main(args)

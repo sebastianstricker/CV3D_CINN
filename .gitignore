@@ -11,6 +11,7 @@
 __pycache__/
 output/
 train_output/
+eval_output/
 fashionmnist_data/
 data/
 *.egg-info

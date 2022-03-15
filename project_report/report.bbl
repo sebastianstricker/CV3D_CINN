@@ -11,6 +11,11 @@ Laurent Dinh, Jascha Sohl{-}Dickstein, and Samy Bengio.
 \newblock Density estimation using real {NVP}.
 \newblock {\em CoRR}, abs/1605.08803, 2016.
 
+\bibitem{freia}
+Visual Learning~Lab Heidelberg.
+\newblock Freia - framework for easily invertible architectures
+  (https://github.com/vll-hd/freia).
+
 \bibitem{fashion_mnist}
 Han Xiao, Kashif Rasul, and Roland Vollgraf.
 \newblock Fashion-mnist: a novel image dataset for benchmarking machine

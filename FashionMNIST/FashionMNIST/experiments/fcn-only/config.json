@@ -10,7 +10,7 @@
 
     "train": {
         "n_epochs": 60,
-        "lr": 1e-3,
+        "lr": 1e-4,
 
         "scheduler": {
             "milestones": [20, 40],

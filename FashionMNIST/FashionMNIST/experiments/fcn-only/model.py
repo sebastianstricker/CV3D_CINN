@@ -46,7 +46,7 @@ class FashionMNIST_cINN(nn.Module):
         nodes.append(Ff.Node(nodes[-1], Fm.Flatten, {}))
 
         subnet = sub_fc(512)
-        for k in range(20):
+        for k in range(24):
             nodes.append(Ff.Node(nodes[-1], Fm.PermuteRandom, {"seed": k}))
             nodes.append(Ff.Node(nodes[-1], Fm.GLOWCouplingBlock,
                                  {"subnet_constructor": subnet, "clamp": 1.0},

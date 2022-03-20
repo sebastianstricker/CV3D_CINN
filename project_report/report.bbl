@@ -16,6 +16,18 @@ Visual Learning~Lab Heidelberg.
 \newblock Freia - framework for easily invertible architectures
   (https://github.com/vll-hd/freia).
 
+\bibitem{softflow}
+Hyeongju {Kim}, Hyeonseung {Lee}, Woo~Hyun {Kang}, Joun {Yeop Lee}, and Nam~Soo
+  {Kim}.
+\newblock {SoftFlow: Probabilistic Framework for Normalizing Flow on
+  Manifolds}.
+\newblock {\em arXiv e-prints}, page arXiv:2006.04604, June 2020.
+
+\bibitem{GLOW}
+Diederik~P. {Kingma} and Prafulla {Dhariwal}.
+\newblock {Glow: Generative Flow with Invertible 1x1 Convolutions}.
+\newblock {\em arXiv e-prints}, page arXiv:1807.03039, July 2018.
+
 \bibitem{fashion_mnist}
 Han Xiao, Kashif Rasul, and Roland Vollgraf.
 \newblock Fashion-mnist: a novel image dataset for benchmarking machine

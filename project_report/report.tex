@@ -64,7 +64,7 @@ For the technical details, we refer to the original publications.
 \end{split}
 \end{equation}
 
-For the models discussed in this work $c$ can be seen as equivalent to the ground truth one-hot encoding $y$. This is not necessary the case, however, as demonstrated by more complex image coloration architectures \cite{main_paper_CINN}.
+For the models discussed in this work $c$ can be seen as equivalent to the ground truth one-hot encoding $y$. As demonstrated by more complex image coloration architectures \cite{main_paper_CINN}, the conditioning can also take other forms, however.
 
 \begin{figure}[t]
 	\begin{center}
@@ -75,12 +75,13 @@ For the models discussed in this work $c$ can be seen as equivalent to the groun
 \end{figure}
 
 \subsection{Interpreting the latent vector}
-As class information is provided as input for each coupling block, this information is inherently not part of the networks output $z$. It raises the question of what information $z$ is supposed to contain.
+In contrast to classification networks, the output $z$ of cINNs is not trained against a given ground truth. Rather, the agreement between $f$ and $f^{-1}$ is trained. It raises the question of what information $z$ is supposed to contain.
 
-Assume for training data $X$, $Z = \{f(x_i;c;\theta) \,|\, x_i \in X\}$ is the set of all $z$ that are an output of the network. The training enforces $Z$ to take the form of a probability distribution $p_Z(z)$. For simplicity, we assume it to be the standard normal. The training Loss is then a maximum likelihood calculation, meaning the inverse pass returns the most likely $x$ given a $z$ and the weights are adjusted for disagreement.
-For technical details, we again refer to the original publication \cite{main_paper_CINN}.
+Assume for training data $X$, $Z = \{f(x_i;c;\theta) \,|\, x_i \in X\}$ is the set of all $z$ that are an output of the network. The training enforces $Z$ to take the form of a probability distribution $p_Z(z)$. For simplicity, we assume it to be the standard normal. The training Loss is then a maximum likelihood calculation, meaning the inverse pass should assign $x$ a high probability, given a $z$ and $c$. The weights are adjusted to increase this likelihood $P(X|Z)$.
 
-As will be shown in section \ref{toy}, interpreting the individual dimensions in the latent space is not trivial. But seen as a whole, $z$ has to capture all the features that make up our input in order to ensure the map $z \rightarrow x $ holds, while maintaining the property that the complete set $Z$ forms a probability distribution. 
+For technical details, we again refer to the original publication \cite{main_paper_CINN}. \\
+
+As will be shown in section \ref{toy}, interpreting the individual dimensions in the latent space is not trivial. But seen as a whole, $z$ has to capture all the features that make up our input in order to ensure the map $z \rightarrow x $ holds, while maintaining the property that the complete set $Z$ forms the given probability distribution. 
 
 \subsection{Image generation and style transfer}
 $Z$ is a finite set, but the probability distribution enforced on the set is a continuous function. Therefore, it is possible to sample from the distribution to obtain a $z' \notin Z$. Running the network in reverse results in $f^{-1}(z';c;\theta) = x'$. $x'$ is then a result, that has not been generated before. 

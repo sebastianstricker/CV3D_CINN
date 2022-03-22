@@ -8,7 +8,7 @@ Install via pip:
 
 Other package dependencies:
 
-+ pytorch
++ pytorch (torch, torchvision)
 + numpy
 + matplotlib
 

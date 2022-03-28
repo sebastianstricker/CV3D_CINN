@@ -10,6 +10,8 @@
 \usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{subcaption}
+\usepackage{mwe}
 
 % Include other packages here, before hyperref.
 
@@ -202,10 +204,78 @@ In cases where the training data distribution sits on a lower-dimensional manifo
 This augmentation procedure failed to produce favorable results in our case. The generated samples are more diverse in color, ranging from nearly invisible black colored samples to light gray. In contrast, the previous augmentation procedure yields extremely bright samples to the point of saturation with darker colors being less common, yet still present. We notice however a degraded quality in generation of sandals, where thin lines in some samples disappear. Changing the interval of sampled standard deviations $\sigma$ also did not result in better generated samples. Not only that, but with $\sigma \in [0.1, 0.2]$ we found noise around the surface of generated samples.
 
 \subsection{Style transfer}
-...
+In this subsection we try to apply the style transfer approach from the cINN minimal example on the fashion MNIST dataset \cite{main_paper_CINN}. Since the original generates only new numbers (MNIST), we expect worse style transfer on clothes, because of rising complexity.
+
+\subsubsection{Basic idea}\label{sec:styletransfer_basicidea}
+The basic idea is to generate different clothes with the style of another clothing. For example taking a shirt with stripes and generate pullovers, trousers or even sandals which also show some kind of stripe style.
+
+\subsubsection{Preparation}\label{sec:styletransfer_preparation}
+First of all we have a quick look on the fashion MNIST dataset and search for an example which has a special style, so we can see if the style transfer worked in the end. As mentioned in \ref{sec:styletransfer_basicidea} a shirt with stripes has a particular style. Some generated samples can be seen on Figure \ref{fig:fashion_mnist_examples}. The shirt in the second row, fourth column, has a print on it. Something with 'FUN ... SUN', which is very unique. We will also use a very simple sample from \ref{fig:fashion_mnist_examples_2}. The plain white shirt in the top left corner should give very good results. 
+
+Besides the finding of a suitable example, we have to train our model, so we can do style transfer giving a computed $Z$. For training we use the MNIST minimal example from cINN repository \cite{main_paper_CINN}. Only the dataset is changed from MNIST to FashionMNIST in data.py.
+
+\begin{figure}[t]
+	\begin{center}
+		\includegraphics[width=0.8\linewidth]{./figs/fashion_mnist/fashion_mnist_examples.png}
+	\end{center}
+	\caption{Samples generated for finding particular clothing as mentioned in \ref{sec:styletransfer_preparation}. There are twenty samples with given labels above. }
+	\label{fig:fashion_mnist_examples}
+\end{figure}
+
+\begin{figure}[t]
+	\begin{center}
+		\includegraphics[width=0.8\linewidth]{./figs/fashion_mnist/fashion_mnist_examples_2.png}
+	\end{center}
+	\caption{Samples generated for finding particular clothing as mentioned in \ref{sec:styletransfer_preparation}. There are twenty samples with given labels above. }
+	\label{fig:fashion_mnist_examples_2}
+\end{figure}
+
+\subsubsection{Generating Samples}
+There is already a given eval.py, which is used to generate random sample clothes. We can find 
+$z = 1.0 * torch.randn(N\_samples, model.ndim\_total).cuda()$ here. This line of code computes a random $Z$ from which the samples are generated. What we want to do here is computing our own $Z$ with the shirt sample we chose in \ref{sec:styletransfer_preparation}. And a second $Z$ with the image data from the plain white shirt in the top left corner of \ref{fig:fashion_mnist_examples_2}.
+
+In Figure \ref{fig:style_transfer_samples} you can see our achievements on style transfer. As you can see, the sharpness of the images is not that good, as the images have only $28 * 28$ pixels. Nevertheless there are some good results. With some imagination you can figure out the "FUN ... SUN" print on the pullover in \ref{fig:shirt1_pullover}. On a whole different object like a sneaker the text is not that recognizable, as visible in Figure \ref{fig:shirt1_sneaker}. For a plain white shirt the style transfer worked quite well, since there are not that heavy conditioning rules. So the coat and the sneaker in Figure \ref{fig:shirt2_coat} and \ref{fig:shirt2_sneaker} are plain white as the shirt, although the sneaker got a little bit grey.
+
+\begin{figure}[t]
+	\centering
+	\begin{subfigure}[b]{0.475\textwidth}
+		\centering
+		\includegraphics[width=0.4\linewidth]{./figs/fashion_mnist/shirt_to_pullover.png}
+		\caption[Network2]%
+		{{\small Print shirt to pullover}}    
+		\label{fig:shirt1_pullover}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.475\textwidth}  
+		\centering 
+		\includegraphics[width=0.4\linewidth]{./figs/fashion_mnist/shirt_to_shoe.png}
+		\caption[]%
+		{{\small Print shirt to sneaker}}    
+		\label{fig:shirt1_sneaker}
+	\end{subfigure}
+	\vskip\baselineskip
+	\begin{subfigure}[b]{0.475\textwidth}   
+		\centering 
+		\includegraphics[width=0.4\linewidth]{./figs/fashion_mnist/shirt2_to_coat.png}
+		\caption[]%
+		{{\small White shirt to coat}}    
+		\label{fig:shirt2_coat}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.475\textwidth}   
+		\centering 
+		\includegraphics[width=0.4\linewidth]{./figs/fashion_mnist/shirt2_to_sneaker.png}
+		\caption[]%
+		{{\small White shirt to sneaker}}    
+		\label{fig:shirt2_sneaker}
+	\end{subfigure}
+	\caption[ Different examples of clothes generated with style transfer from the conditioning shirts mentioned in \ref{sec:styletransfer_preparation}]
+	{\small Different examples of clothes generated with style transfer from the conditioning shirts mentioned in \ref{sec:styletransfer_preparation}} 
+	\label{fig:style_transfer_samples}
+\end{figure}
 
 \section{Conclusion}
-In the first part we explored conditional invertible neural networks on a toy example, giving intuition behind the latent space, as well as performed sample generation and style transfer. In the second part we applied them to a new dataset and explored different architectures. We found that sample generation is challenging even for a simple dataset like FashionMNIST. Throughout experimentation we failed to find a model which could generate samples with fine details. In future work, we would be interested in deepening the subnets by adding a second hidden layer. Moreover reducing the number of coupling blocks in the first stage might allow the skip connection to transfer more detailed pixel information to the latent space.
+In the first part we explored conditional invertible neural networks on a toy example, giving intuition behind the latent space, as well as performed sample generation and style transfer. In the second part we applied them to a new dataset and explored different architectures. We found that sample generation is challenging even for a simple dataset like FashionMNIST. Throughout experimentation we failed to find a model which could generate samples with fine details. We saw that style transfer worked quite well, provided that it was possible, in case of different clothes. In future work, we would be interested in deepening the subnets by adding a second hidden layer. Moreover reducing the number of coupling blocks in the first stage might allow the skip connection to transfer more detailed pixel information to the latent space.
 
 {\small
 \bibliographystyle{ieee_fullname}
